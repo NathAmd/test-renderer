@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projet 3D</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            perspective: 1000px;
+        }
+        .info-box {
+            position: absolute;
+            width: 150px; /* Ajuster la largeur */
+            height: 75px;  /* Ajuster la hauteur */
+            background-color: rgba(255, 255, 255, 0.8);
+            border: 1px solid #000;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer.js';
+
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        container.appendChild(renderer.domElement);
+
+        const cssRenderer = new CSS3DRenderer();
+        cssRenderer.setSize(window.innerWidth, window.innerHeight);
+        cssRenderer.domElement.style.position = 'absolute';
+        cssRenderer.domElement.style.top = 0;
+        container.appendChild(cssRenderer.domElement);
+
+        // Ajouter un brouillard noir plus proche
+        // scene.fog = new THREE.Fog(0x000000, 1, 100);
+
+        // Fonction pour créer des particules
+        function createParticles() {
+            const particleCount = 1000000;
+            const particles = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+
+            for (let i = 0; i < particleCount; i++) {
+                positions[i * 3] = (Math.random() * 2000) - 1000;
+                positions[i * 3 + 1] = (Math.random() * 2000) - 1000;
+                positions[i * 3 + 2] = - (Math.random() * 2000);
+            }
+
+            particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+            const particleMaterial = new THREE.PointsMaterial({
+                color: 0xffffff,
+                size: 1,
+                transparent: true,
+                opacity: 0.8
+            });
+
+            const particleSystem = new THREE.Points(particles, particleMaterial);
+            scene.add(particleSystem);
+
+            return particleSystem;
+        }
+
+        const particleSystem = createParticles();
+
+        function createInfoPlane(text, x, y, z) {
+            const div = document.createElement('div');
+            div.className = 'info-box';
+            div.innerText = text;
+            document.body.appendChild(div);
+
+            const cssObject = new CSS3DObject(div);
+            cssObject.position.set(x, y, z);
+            scene.add(cssObject);
+
+            return cssObject;
+        }
+
+        let dist = 300;
+        let min = 200;
+        // Ajouter plusieurs plans avec des divs dispersés
+        for(let i = 0;i < 100;i++){
+            let x = ((Math.random()-0.5) * dist * 2);
+            let y = ((Math.random()-0.5) * dist * 2);
+            createInfoPlane('Information ' + i, x + (min * Math.sign(x)), y + (min * Math.sign(y)), -50 * (i+1));
+        }
+
+        camera.position.z = 5;
+
+        function animate() {
+            requestAnimationFrame(animate);
+            scene.children.forEach((child) => {
+                if (child instanceof CSS3DObject) {
+                    child.lookAt(camera.position);
+                }
+            });
+
+            // Réinitialiser les particules qui sortent du champ de vision
+            const positions = particleSystem.geometry.attributes.position.array;
+            for (let i = 0; i < positions.length; i += 3) {
+                if (positions[i + 2] > camera.position.z) {
+                    positions[i] = (Math.random() * 2000) - 1000;
+                    positions[i + 1] = (Math.random() * 2000) - 1000;
+                    positions[i + 2] = camera.position.z - (Math.random() * 2000);
+                }
+            }
+            particleSystem.geometry.attributes.position.needsUpdate = true;
+
+            renderer.render(scene, camera);
+            cssRenderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('wheel', (event) => {
+    camera.position.z += event.deltaY * 0.25;
+    scene.children.forEach((child) => {
+        // Vérifier si l'enfant a une certaine classe
+        if (child.position.z > camera.position.z && child.className === 'info-box') {
+            scene.remove(child);
+
+            let x = ((Math.random() - 0.5) * dist * 2);
+            let y = ((Math.random() - 0.5) * dist * 2);
+            createInfoPlane('Nouvelle Information', x + (min * Math.sign(x)), y + (min * Math.sign(y)), camera.position.z - (50 * 100));
+        }
+    });
+});
+
+    </script>
+</body>
+</html>
