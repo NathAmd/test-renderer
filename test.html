@@ -57,7 +57,7 @@
 
         // Fonction pour créer des particules
         function createParticles() {
-            const particleCount = 5000;
+            const particleCount = 1000;
             const particles = new THREE.BufferGeometry();
             const positions = new Float32Array(particleCount * 3);
 
@@ -127,25 +127,25 @@ function animate() {
 
     const positions = particleSystem.geometry.attributes.position.array;
     for (let i = 0; i < positions.length; i += 3) {
-        let x = (Math.cos(i*Date.now()/10000000) * 10) - 5;
-        let y = (Math.cos(i*Date.now()/10000000)) - 100 + ((200/positions.length)*i);
-        let z = (Math.cos(i*Date.now()/10000000) * 10) - 5;
+        let x = (Math.sin(i*(Date.now()/1000000)) * 50);
+        let y = (Math.cos(i*(Date.now()/1000000))) - 50 + ((100/positions.length)*i);
+        let z = (Math.cos(i*(Date.now()/1000000)) * 50);
         
 
         // Calculer la distance entre la particule et la souris
         const dist = distance3D(positions[i], positions[i + 1], positions[i + 2], mousePositionIn3D.x, mousePositionIn3D.y, -100);
 
         // Si la particule est trop proche de la souris, ajuster sa position
-        if (dist < 50) {
-            const angle = Math.atan2(positions[i + 1] - mousePositionIn3D.y, positions[i] - mousePositionIn3D.y);
-            x = positions[i] + Math.cos(angle) * 50;
-            y = positions[i + 1] + Math.sin(angle) * 50;
-            z = positions[i + 2];
-        }
+        // if (dist < 50) {
+        //     const angle = Math.atan2(positions[i + 1] - mousePositionIn3D.y, positions[i] - mousePositionIn3D.y);
+        //     x = positions[i] + Math.cos(angle) * 50;
+        //     y = positions[i + 1] + Math.sin(angle) * 50;
+        //     z = positions[i + 2];
+        // }
 
-        positions[i] = lerp(positions[i], x, 0.02);
-        positions[i + 1] = lerp(positions[i + 1], y, 0.02);
-        positions[i + 2] = lerp(positions[i + 2], z - 100, 0.02);
+        positions[i] = lerp(positions[i], x, 0.03);
+        positions[i + 1] = lerp(positions[i + 1], y, 0.03);
+        positions[i + 2] = lerp(positions[i + 2], z - 100, 0.03);
     }
     particleSystem.geometry.attributes.position.needsUpdate = true;
 
