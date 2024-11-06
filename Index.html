@@ -146,6 +146,36 @@
     });
 });
 
+let touchStartY = 0;
+let touchEndY = 0;
+
+window.addEventListener('touchstart', function(event) {
+    touchStartY = event.changedTouches[0].clientY;
+}, false);
+
+window.addEventListener('touchend', function(event) {
+    touchEndY = event.changedTouches[0].clientY;
+    handleScroll();
+}, false);
+
+function handleScroll() {
+    const deltaY = touchEndY - touchStartY;
+
+    // Ajuster la position de la caméra en fonction de la différence de glissement
+    camera.position.z += deltaY * 0.25;
+
+    scene.children.forEach((child) => {
+        if (child.position.z > camera.position.z && child.className === 'info-box') {
+            scene.remove(child);
+
+            let x = ((Math.random() - 0.5) * dist * 2);
+            let y = ((Math.random() - 0.5) * dist * 2);
+            createInfoPlane('Nouvelle Information', x + (min * Math.sign(x)), y + (min * Math.sign(y)), camera.position.z - (50 * 100));
+        }
+    });
+}
+
+
     </script>
 </body>
 </html>
