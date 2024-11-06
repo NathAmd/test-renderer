@@ -147,22 +147,25 @@
 });
 
 let touchStartY = 0;
-let touchEndY = 0;
+let touchCurrentY = 0;
 
 window.addEventListener('touchstart', function(event) {
-    touchStartY = event.changedTouches[0].clientY;
+    touchStartY = event.touches[0].clientY;
 }, false);
 
-window.addEventListener('touchend', function(event) {
-    touchEndY = event.changedTouches[0].clientY;
+window.addEventListener('touchmove', function(event) {
+    touchCurrentY = event.touches[0].clientY;
     handleScroll();
 }, false);
 
 function handleScroll() {
-    const deltaY = touchEndY - touchStartY;
+    const deltaY = touchCurrentY - touchStartY;
 
     // Ajuster la position de la caméra en fonction de la différence de glissement
     camera.position.z += deltaY * 0.25;
+
+    // Réinitialiser touchStartY pour le prochain mouvement
+    touchStartY = touchCurrentY;
 
     scene.children.forEach((child) => {
         if (child.position.z > camera.position.z && child.className === 'info-box') {
@@ -174,6 +177,7 @@ function handleScroll() {
         }
     });
 }
+
 
 
     </script>

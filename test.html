@@ -57,7 +57,7 @@
 
         // Fonction pour créer des particules
         function createParticles() {
-            const particleCount = 100000;
+            const particleCount = 5000;
             const particles = new THREE.BufferGeometry();
             const positions = new Float32Array(particleCount * 3);
 
@@ -89,33 +89,55 @@
 
         let mouse = { x: 0, y: 0 };
 
+
 window.addEventListener('mousemove', (event) => {
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    console.log(`Mouse X: ${mouse.x}, Mouse Y: ${mouse.y}`); // Pour déboguer
 });
+
+window.addEventListener('touchmove', (event) => {
+    if (event.touches.length > 0) {
+        mouse.x = (event.touches[0].clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.touches[0].clientY / window.innerHeight) * 2 + 1;
+    }
+});
+
+
+let raycaster = new THREE.Raycaster();
+
+function getMousePositionIn3D(mouse, camera) {
+    let vector = new THREE.Vector3(mouse.x, mouse.y, 0.5); // Utiliser z = 0.5 pour obtenir un point dans le plan de la caméra
+    vector.unproject(camera);
+    
+    let dir = vector.sub(camera.position).normalize();
+    let distance = (camera.position.z - 100) / dir.z; // Distance pour atteindre z = -100
+    let position = camera.position.clone().add(dir.multiplyScalar(distance));
+    
+    return position;
+}
+
 
 
 function animate() {
     requestAnimationFrame(animate);
 
     // Position de la souris en 3D
-    const mouse3D = new THREE.Vector3(mouse.x, mouse.y, - 100);
+    let mousePositionIn3D = getMousePositionIn3D(mouse, camera);
 
     const positions = particleSystem.geometry.attributes.position.array;
     for (let i = 0; i < positions.length; i += 3) {
-        let x = (Math.cos(i*Date.now()/100000000) * 10) - 5;
-        let y = (Math.cos(i*Date.now()/100000000)) - 100 + ((200/positions.length)*i);
-        let z = (Math.cos(i*Date.now()/100000000) * 10) - 5;
-
-        // console.log(x,y,z);
+        let x = (Math.cos(i*Date.now()/10000000) * 10) - 5;
+        let y = (Math.cos(i*Date.now()/10000000)) - 100 + ((200/positions.length)*i);
+        let z = (Math.cos(i*Date.now()/10000000) * 10) - 5;
         
 
         // Calculer la distance entre la particule et la souris
-        const dist = distance3D(positions[i], positions[i + 1], positions[i + 2], mouse3D.x, mouse3D.y, positions[i + 2]);
+        const dist = distance3D(positions[i], positions[i + 1], positions[i + 2], mousePositionIn3D.x, mousePositionIn3D.y, -100);
 
         // Si la particule est trop proche de la souris, ajuster sa position
         if (dist < 50) {
-            const angle = Math.atan2(positions[i + 1] - mouse3D.y, positions[i] - mouse3D.x);
+            const angle = Math.atan2(positions[i + 1] - mousePositionIn3D.y, positions[i] - mousePositionIn3D.y);
             x = positions[i] + Math.cos(angle) * 50;
             y = positions[i + 1] + Math.sin(angle) * 50;
             z = positions[i + 2];
